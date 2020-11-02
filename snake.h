@@ -23,7 +23,7 @@ public:
 
 class SnakeSegment : public Point {
 public:
-	SnakeSegment(unsigned int _x, unsigned int _y) : Point(x, y), dirX(DirectionX::NONE), dirY(DirectionY::NONE) {}
+    SnakeSegment(unsigned int _x, unsigned int _y) : Point(_x, _y), dirX(DirectionX::NONE), dirY(DirectionY::NONE) {}
 	SnakeSegment(unsigned int _x, unsigned int _y, DirectionX _dirX, DirectionY _dirY) : Point(_x, _y), dirX(_dirX), dirY(_dirY) {}
 
 	DirectionX dirX;
