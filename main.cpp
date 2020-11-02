@@ -1,3 +1,11 @@
+/**
+* Simple console Snake game.
+* Used chars:
+* '*' - Wall and snake
+* ' ' - empty cell
+* '@' - apple
+*/
+
 #ifdef _WIN32
 #define PDC_DLL_BUILD
 #include "curses.h"
@@ -16,31 +24,31 @@ const int SNAKE_INIT_SIZE = 6;
 typedef std::array<std::array<char, FIELD_SIZE_X>, FIELD_SIZE_Y> GameFieldArray;
 typedef std::list<SnakeSegment> Snake;
 
-void init(GameFieldArray &field, Snake &snake);
-void initField(GameFieldArray &field, Snake &snake);
-Snake initSnake();
+void init();
+void initCurses();
+void initField();
+void initSnake();
 
-void drawField(GameFieldArray &field, Snake &snake);
-bool moveSnake(GameFieldArray &field, Snake &snake);
+unsigned int random(unsigned int min, unsigned int max);
+
+void drawField();
+bool moveSnake();
 SnakeSegment getNextMove(SnakeSegment &head);
 
 void addApple(GameFieldArray &field, const Snake &snake);
 
-unsigned int random(unsigned int min, unsigned int max) {
-	unsigned int rnd = static_cast<unsigned int>(rand());
-	return rnd % (max - min) + min;
-}
+GameFieldArray gameField;
+Snake snake;
 
 int main()
 {
-	GameFieldArray gameField;
-	Snake snake;
 
-	init(gameField, snake);
+    init();
 
 	bool exit = false;
 
-	while (!exit) {
+    while (!exit)
+    {
 		int ch = getch();
 		bool crash = false;
 
@@ -48,8 +56,8 @@ int main()
 		{
 		case ERR:
 			clear();
-			drawField(gameField, snake);
-			crash = moveSnake(gameField, snake);
+            drawField();
+            crash = moveSnake();
 			break;
 		case 'q':
 			exit = true;
@@ -98,15 +106,16 @@ int main()
 	cbreak();
 	getch();
 
-	endwin();                    // Выход из curses-режима. Обязательная команда.
+    endwin();                    // Turn off curses-mode. Mandatory!
 
 	system("pause");
 
 	return 0;
 }
 
-void addApple(GameFieldArray &field, const Snake &snake)
+void addApple()
 {
+    GameFieldArray &field = gameField;
 	bool placeFound = false;
 	Point apple;
 
@@ -128,8 +137,9 @@ void addApple(GameFieldArray &field, const Snake &snake)
 	field[apple.y][apple.x] = '@';
 }
 
-bool appleFound(GameFieldArray &field, const SnakeSegment &head)
+bool appleFound(const SnakeSegment &head)
 {
+    GameFieldArray &field = gameField;
 	if (field[head.y][head.x] == '@')
 	{
 		field[head.y][head.x] = ' ';
@@ -147,7 +157,8 @@ bool fieldCrash(GameFieldArray &field, SnakeSegment &head)
 
 bool selfCrash(const Snake &snake, const SnakeSegment &head)
 {
-	for (auto &seg : snake) {
+    for (auto &seg : snake)
+    {
 		if (head == seg)
 			return true;
 	}
@@ -156,8 +167,9 @@ bool selfCrash(const Snake &snake, const SnakeSegment &head)
 }
 
 
-bool moveSnake(GameFieldArray &field, Snake &snake)
+bool moveSnake()
 {
+    GameFieldArray &field = gameField;
 	auto &back = snake.back();
 	snake.pop_back();
 
@@ -167,9 +179,10 @@ bool moveSnake(GameFieldArray &field, Snake &snake)
 	if (fieldCrash(field, nextMove) || selfCrash(snake, nextMove))
 		return true;
 
-	if (appleFound(field, nextMove)) {
+    if (appleFound(nextMove))
+    {
 		snake.push_back(back);
-		addApple(field, snake);
+        addApple();
 	}
 
 	snake.push_front(nextMove);
@@ -184,71 +197,89 @@ SnakeSegment getNextMove(SnakeSegment &head)
 	return SnakeSegment(x, y, head.dirX, head.dirY);
 }
 
-Snake initSnake()
+void initSnake()
 {
-	Snake snake;
-
+    snake.clear();
 	SnakeSegment snakeHead((FIELD_SIZE_X - SNAKE_INIT_SIZE) / 2, FIELD_SIZE_Y / 2, DirectionX::LEFT, DirectionY::NONE);
 	snake.push_front(snakeHead);
 
 	SnakeSegment *prevSegment = &snakeHead;
-	for (int i = 1; i < SNAKE_INIT_SIZE; ++i) {
+    for (int i = 1; i < SNAKE_INIT_SIZE; ++i)
+    {
 		SnakeSegment newSegment(prevSegment->x + 1, prevSegment->y, DirectionX::LEFT, DirectionY::NONE);
 		snake.push_back(newSegment);
 
 		prevSegment = &newSegment;
 	}
-
-	return snake;
 }
 
-void drawField(GameFieldArray &field, Snake &snake)
+void drawField()
 {
-	// Draw field itself
-	for (GameFieldArray::size_type i = 0; i < FIELD_SIZE_Y; ++i) {
+    GameFieldArray &field = gameField;
+
+    // Draw field itself
+    for (GameFieldArray::size_type i = 0; i < FIELD_SIZE_Y; ++i)
+    {
 		const char* fieldStr = field[i].data();
 		mvprintw(static_cast<int>(i), 0, fieldStr);
 	}
 
 	//Draw snake
-	for (auto &snakeSeg : snake) {
+    for (auto &snakeSeg : snake)
+    {
 		mvaddch(snakeSeg.y, snakeSeg.x, '*');
 	}
 }
 
-void init(GameFieldArray &field, Snake &snake)
+void initCurses()
 {
-	snake = initSnake();
-	initField(field, snake);
+    initscr();              // Go to curses-mode
+    keypad(stdscr, true);   // Turn on function keys reading
 
-	initscr();              // Переход в curses-режим
-	keypad(stdscr, true);   //Включаем режим чтения функциональных клавиш
+    noecho();
+    halfdelay(5);
 
-	noecho();
-	halfdelay(5);
-
-	curs_set(0);
+    curs_set(0);
 }
 
-void initField(GameFieldArray &field, Snake &snake)
+void init()
 {
-	for (GameFieldArray::size_type i = 0; i < FIELD_SIZE_Y; ++i) {
+    initSnake();
+    initField();
+
+    initCurses();
+}
+
+void initField()
+{
+    GameFieldArray &field = gameField;
+    for (GameFieldArray::size_type i = 0; i < FIELD_SIZE_Y; ++i)
+    {
 		field[i][FIELD_SIZE_X - 1] = '\0';
 	}
 
-	for (GameFieldArray::size_type i = 0; i < FIELD_SIZE_X - 1; ++i) {
+    for (GameFieldArray::size_type i = 0; i < FIELD_SIZE_X - 1; ++i)
+    {
 		field[0][i] = '*';
 		field[FIELD_SIZE_Y - 1][i] = '*';
 	}
 
-	for (GameFieldArray::size_type i = 1; i < FIELD_SIZE_Y - 1; ++i) {
+    for (GameFieldArray::size_type i = 1; i < FIELD_SIZE_Y - 1; ++i)
+    {
 		field[i][0] = '*';
 		field[i][FIELD_SIZE_X - 2] = '*';
 
-		for (GameFieldArray::size_type j = 1; j < FIELD_SIZE_X - 2; ++j) {
+        for (GameFieldArray::size_type j = 1; j < FIELD_SIZE_X - 2; ++j)
+        {
 			field[i][j] = ' ';
 		}
 	}
 
-	addApple(field, snake);
+    addApple();
+}
+
+unsigned int random(unsigned int min, unsigned int max)
+{
+    unsigned int rnd = static_cast<unsigned int>(rand());
+    return rnd % (max - min) + min;
 }
