@@ -15,6 +15,7 @@
 #endif
 #include <array>
 #include <iostream>
+#include <fstream>
 #include <list>
 #include "snake.h"
 
@@ -71,10 +72,13 @@ void drawMessage(const char* str) { drawString(5, FIELD_SIZE_Y + 2, str); }
 
 void reactToInput(int key);
 bool checkCrash();
+void loadLevel(std::string levelFile);
 
 int main()
 {
     init();
+
+    refresh();
 
     update();
 
@@ -103,6 +107,18 @@ void update()
 
         refresh();
     }
+}
+
+void loadLevel(std::string levelFile) {
+    std::ifstream lvlFile;
+    lvlFile.open(levelFile);
+    std::string line;
+    int cnt = 0;
+    while (getline(lvlFile, line)) {
+        drawString(2, FIELD_SIZE_Y + 5 + cnt, line.c_str());
+        cnt++;
+    }
+    lvlFile.close();
 }
 
 bool checkCrash()

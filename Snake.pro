@@ -11,3 +11,6 @@ unix: PKGCONFIG += ncurses
 
 HEADERS += \
     snake.h
+
+DISTFILES += \
+    level2.txt
