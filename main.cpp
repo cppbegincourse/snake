@@ -47,6 +47,7 @@ void drawField();
 
 char getFieldChar(const Point &p) { return gameField[p.y][p.x]; };
 void setFieldChar(const Point &p, const char value) { gameField[p.y][p.x] = value; };
+void setFieldChar(const int x, const int y, const char value) { gameField[y][x] = value; };
 
 bool isWall(const Point &p) { return getFieldChar(p) == FIELD_CHAR_WALL; }
 bool isSnake(const Point &p) { return getFieldChar(p) == FIELD_CHAR_SNAKE; }
@@ -64,6 +65,8 @@ void addApple();
 unsigned int random(unsigned int min, unsigned int max);
 
 void drawString(const int x, const int y, const char* str) { mvprintw(y, x, str); };
+void drawChar(const int x, const int y, const char ch) { mvaddch(y, x, ch); };
+
 void drawMessage(const char* str) { drawString(5, FIELD_SIZE_Y + 2, str); }
 
 void reactToInput(int key);
@@ -259,13 +262,13 @@ void drawField()
     for (GameFieldArray::size_type i = 0; i < FIELD_SIZE_Y; ++i)
     {
 		const char* fieldStr = field[i].data();
-		mvprintw(static_cast<int>(i), 0, fieldStr);
+        drawString(0, i ,fieldStr);
 	}
 
 	//Draw snake
     for (auto &snakeSeg : snake)
     {
-        mvaddch(snakeSeg.y, snakeSeg.x, FIELD_CHAR_SNAKE);
+        drawChar(snakeSeg.x, snakeSeg.y, FIELD_CHAR_SNAKE);
 	}
 }
 
@@ -293,24 +296,24 @@ void initField()
     GameFieldArray &field = gameField;
     for (GameFieldArray::size_type i = 0; i < FIELD_SIZE_Y; ++i)
     {
-		field[i][FIELD_SIZE_X - 1] = '\0';
+        setFieldChar(FIELD_SIZE_X - 1, i, '\0');
 	}
 
     for (GameFieldArray::size_type i = 0; i < FIELD_SIZE_X - 1; ++i)
     {
-        field[0][i] = FIELD_CHAR_WALL;
-        field[FIELD_SIZE_Y - 1][i] = FIELD_CHAR_WALL;
+        setFieldChar(i, 0, FIELD_CHAR_WALL);
+        setFieldChar(i, FIELD_SIZE_Y - 1, FIELD_CHAR_WALL);
 	}
 
     for (GameFieldArray::size_type i = 1; i < FIELD_SIZE_Y - 1; ++i)
     {
-        field[i][0] = FIELD_CHAR_WALL;
-        field[i][FIELD_SIZE_X - 2] = FIELD_CHAR_WALL;
+        setFieldChar(0, i, FIELD_CHAR_WALL);
+        setFieldChar(FIELD_SIZE_X - 2, i, FIELD_CHAR_WALL);
 
         for (GameFieldArray::size_type j = 1; j < FIELD_SIZE_X - 2; ++j)
         {
-            field[i][j] = FIELD_CHAR_EMPTY;
-		}
+            setFieldChar(j, i, FIELD_CHAR_EMPTY);
+        }
 	}
 
     addApple();
