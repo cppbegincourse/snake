@@ -16,6 +16,7 @@
 #include <array>
 #include <iostream>
 #include <fstream>
+#include <string>
 #include <list>
 #include "snake.h"
 
